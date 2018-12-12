@@ -17,6 +17,11 @@
               <button class="btn btn-outline-secondary btnlogout" type="button">退出</button>
             </div>
      </div>
+     <div class="content">
+         <ul class="list-group mt-3 theMsg">
+             <li class="list-group" ></li>
+        </ul>
+     </div>
      <div class="form-group mt-3">
          <textarea name="msg" id="msg" class="form-control"></textarea>
      </div>
@@ -35,6 +40,7 @@
                     * 
             定义消息状态
                 *status：
+                    0
                     1
                     2
                     3 
@@ -42,33 +48,83 @@
         (()=>{
             var username = document.querySelector('.username');
             var btnlogin = document.querySelector('.btnlogin');
-            var btnlogout = document.querySelector('.btnlogin');
+            var btnlogout = document.querySelector('.btnlogout');
             var btnsend = document.querySelector('.btnsend');
             var msg = document.querySelector('#msg');
             var statusBar = document.querySelector('.statusBar');
+            var theMsg = document.querySelector('.theMsg');
+            var content = document.querySelector('.content');
+            var socket;
+            //所有消息
+            let msglist = [];
+            let data=[];
             btnlogin.onclick = function(){
-                let socket = new WebSocket('ws://localhost:1212');
+                socket = new WebSocket('ws://localhost:1212');
                 //监听是否连接成功
                 socket.onopen = function(e){
                     statusBar.innerText= `连接${e.target.url}服务器成功`;
                     //发型登陆信息给服务器
                     //前后端的数据交互的数据类型：String
-                    let data = {
-                                    status:2,
-                                    message:{
-                                        username:username.value,
-                                    }
-                                }
                     //把数据转换成字符串类型
-                    socket.send(JSON.stringify(data));
+                     socket.send(JSON.stringify({
+                                status:1,
+                                data:{
+                                    username:username.value,
+                                }
+                            })); 
                 };
 
                 //接受服务器的数据，保存在event.data
                 socket.onmessage = function(e){
-                    let data = JSON.parse(e);
-                    console.log('datta:',data)
+                    // console.log('data:',e);
+                    let {status,data} = JSON.parse(e.data);
+                    switch(status){
+                        case 0:
+                            statusBar.innerText = `${data.username}已退出群聊`; 
+                            break;
+                        case 1 :
+                            statusBar.innerText = `${data.username}进入聊天室`; 
+                            break;   
+                        case 2 :
+                            msglist.push(data); 
+                            bianli();
+                            break;   
+                    }
                 }
+            }
+            //点击发送消息
+            btnsend.onclick = ()=>{
+                socket.send(JSON.stringify({
+                    status:2,
+                    data:{
+                        username:username.value,
+                        msg:msg.value,
+                        time:Date.now()
+                    }
+                }));
+                msg.value = '';
+                msg.focus();
+            }
+            //点击退出
+            btnlogout.onclick = ()=>{
+                socket.send(JSON.stringify({
+                    status:0,
+                    data:{
+                        username:username.value,
+                    }
+                }));
+                socket.close();
+            }
+            
 
+            function bianli(){
+              theMsg.innerHTML = msglist.map((item)=>{
+                  return `<li class="list-group-item">
+                    <h4 style="color:skyblue">${item.username}</h4>
+                    <div>${item.msg}</div>
+                    <time>${new Date(item.time).toLocaleString()}</time>
+                  </li>`;  
+                }).join('');
             }
         })();
     </script>

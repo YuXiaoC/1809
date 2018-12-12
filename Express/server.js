@@ -37,12 +37,12 @@ app.post('/list',function(req,res){
 
 //定义搜索
 app.get('/search',function(req,res){
-    console.log(req.query.username);
+    console.log(req.query.username); 
     res.send('这是数据');
 });
 
 //GET请求方式
-//定义动态路由:地址为变量
+//定义动态路由:dfasdfasd地址为变量
 app.get('/goodslist/:id',function(req,res){
     //获取所有商品
     let goodslist = [{id:'1',name:'note7',price:3432},{id:'3',name:'iphone7',price:7896}];
